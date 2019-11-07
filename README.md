@@ -6,6 +6,8 @@ This project scrape 'ustrip' hashtag data from Instagram social application for 
 
 ## Part 1 : Scraping Data
 
+The first process is to scrape the check-ins and date of the user from Instagram. In this project, I use selenium to connect to Instagram website and use Beautiful Soup to read the content of html. As Instagram is a infinite scroll website, I use selenium to open the browser and scroll the page down until the end to collect all the post links. Then I use for loop to open all the links and get the check-ins location and date from each posts.
+
 ```python
 from selenium import webdriver
 from bs4 import BeautifulSoup
@@ -42,10 +44,6 @@ for i in range(20000):
     time.sleep(1)
     
 ### Caution : This process take a lot of time (nearly a day)
-```
-```python
-# As I collect all the links from each loop, it will contain a lot of duplicate link while scroll down in each loop.
-len(links)
 ```
 ```python
 # Delete the duplicate links
@@ -92,16 +90,143 @@ df = pd.DataFrame(join)
 # Set index to Location
 df.set_index('Location', inplace=True)
 ```
-
-The first process is to scrape the check-ins and date of the user from Instagram. In this project, I use selenium to connect to Instagram website and use Beautiful Soup to read the content of html. As Instagram is a infinite scroll website, I use selenium to open the browser and scroll the page down until the end to collect all the post links. Then I use for loop to open all the links and get the check-ins location and date from each posts.
+I export the data frame to IG.csv file.
 
 ## Part 2 : Cleaning Data
 
 As all posts didn’t contain check-ins place so the second step is clear all rows that don’t have check-ins data by delete all none values.Moreover, I would like to find the factor that would affect to number of check-ins. There are 3 variables that I think it would have some relation with number of travel which are USIndex, Temperature and Crime rate. So I use data from macrotrend website for USIndex data, National Center for Environmental information for average temperature of each state, and FEDERAL BUREAU OF INVESTIGATION for the crime data. For the temperature data, it contain separate data of each stage, so I use for loop to run all files and then concatenate all the file. Then I have to clean all data up a bit and rename some columns for more readable.
 
+```python
+import pandas as pd 
+```
+
+```python
+AllIG = pd.read_csv('IG.csv')
+#Clear all none location Check-ins
+df = AllIG.dropna()
+#Reset the index
+df = IG.reset_index(drop=True)
+```
+
+```python
+# Extracting Month and Year of each post and add the season
+month = []
+year = []
+season = []
+for i in range (len(df.index)):
+        year.append((df.loc[i,'Date'][0:4]))
+        month.append((df.loc[i,'Date'][5:7]))  
+        if df.loc[i,'Date'][5:7] in ['03','04','05'] :
+            season.append('Spring')
+        elif df.loc[i,'Date'][5:7] in ['06','07','08'] :
+            season.append('Summer')
+        elif df.loc[i,'Date'][5:7] in ['09','10','11'] :
+            season.append('Fall')
+        elif df.loc[i,'Date'][5:7] in ['12','01','02'] :
+            season.append('Winter') 
+```
+```python
+join = {'Month':month,'Year':year,'Season':season}
+df2 = pd.DataFrame(join)
+Data = pd.concat([df,df2], axis=1)
+Data = Data.drop(['Date'],axis =1)
+```
+
+I export the data frame to IG_clean.csv file.
+
 ## Part 3 : Finding Latitude and Longitude
 
 After I have all location data, the next process is to find the latitude and longitude of the location. I use geo coder to find the location from the name of the check-ins. And also drop the place the cannot find the location of it. 
+
+
+<b>
+
+<p>
+<center>
+<font size="6">
+Data Mining Project 2
+</font>
+</center>
+</p>
+
+<p>
+<center>
+<font size="5">
+Instagram "ustrip" Check-ins Databease 
+</font>
+</center>
+</p>
+
+<p>
+<center>
+<font size="3">
+Data Mining, Columbian College of Arts & Sciences, George Washington University
+</font>
+</center>
+</p>
+
+<p>
+<center>
+<font size="3">
+Author: Voratham Tiabrat
+</font>
+</center>
+</p>
+
+</b>
+
+# Part 3 : Getting Latitude and Longtitude
+
+
+```python
+!pip install gmplot
+!pip install geopy
+``` 
+```python
+import pandas as pd 
+import numpy as np
+import time
+from gmplot import gmplot
+from matplotlib import pyplot as plt 
+from geopy.geocoders import Nominatim
+```
+```python
+df = pd.read_csv('IG_clean.csv')
+df.set_index('Location', inplace=True)
+```
+```python
+location_address = []
+latitude = []
+longitude = []
+# Find th Latitude and Longtitude to plot in the graph
+for i in range (len(df.index)):
+    try :
+        geolocator = Nominatim(user_agent="my-app")
+        place = geolocator.geocode(df.index[i])
+        location_address.append(place.address)
+        latitude.append(place.latitude)
+        longitude.append(place.longitude)
+    
+    except :
+        location_address.append(None)
+        latitude.append(None) 
+        longitude.append(None)
+    
+    #Geocoder allow user to take maximum of 1 request per second
+    time.sleep(1)
+```
+```python
+join = {'Address':location_address,'Latitude':latitude,'Longitude':longitude}
+location = pd.DataFrame(join)
+```
+```python
+#set index to match with location dataframe
+df = df.reset_index()
+Data = pd.concat([df,location], axis=1)
+#Clear all none location Check-ins
+Datadrop = Data.dropna()
+```
+I export the data frame to Location.csv file.
 
 ## Part 4 : Creating Database
 

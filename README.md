@@ -1026,4 +1026,12 @@ This are the function in database :
 
 ## Conclusion :
 
+![output_45_3](https://user-images.githubusercontent.com/53027899/68407831-3d8fc600-0152-11ea-9c64-62512b619eeb.png)
+
+![output_45_7](https://user-images.githubusercontent.com/53027899/68407832-3d8fc600-0152-11ea-93c8-8f3d9e4e8bdd.png)
+
+![output_45_9](https://user-images.githubusercontent.com/53027899/68407833-3e285c80-0152-11ea-96ce-9c0f026871e2.png)
+
+![output_45_11](https://user-images.githubusercontent.com/53027899/68407834-3e285c80-0152-11ea-8ec7-d21b3f641ff9.png)
+
 From the database, you can find the popular place or state to visit in each season. Moreover, it also show that there are mostly likely to have 2 peak check-ins periods for each year, which are March to April and August to September. From the US Index graph, it suggest that US Index are not seem to affect to number of check-ins. I think this is because even the US Index is high, but if it is in the high season, they would still get out to travel in US anyway. From the temperature graph, it number of check-ins is in the same trend as temperature. This must because international tourist would likely to have some cold experience or see some snow as their country  didn’t have such a thing, so new experince is what people want.Finally, the crime graph show that the crime rate is continuously drop since 2016 and the number of chech-ins also rise up too. Thererfore, the safety of place would also affect number of tourist too.

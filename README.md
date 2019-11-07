@@ -6,6 +6,93 @@ This project scrape 'ustrip' hashtag data from Instagram social application for 
 
 ## Part 1 : Scraping Data
 
+```python
+from selenium import webdriver
+from bs4 import BeautifulSoup
+import re
+import time
+import pandas as pd
+import numpy as np
+```
+```python
+# Create the driver to open instagram browser
+driver = webdriver.Chrome()
+driver.get('https://www.instagram.com/explore/tags/ustrip')
+driver.maximize_window()
+height = driver.execute_script("return document.body.scrollHeight")
+links = []
+
+for i in range(20000):
+    # Instagram use infinite scroll webpage, therefore to scrape the data, have to scroll down for updating the new content
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    source = driver.page_source
+    data = BeautifulSoup(source, 'lxml')
+    body = data.find('body')
+    span = body.find('span')
+    for link in span.findAll('a'):
+        # As in the html, the link of each posts would contain /p before each unique value
+        if re.match("/p", link.get('href')):
+            links.append('https://www.instagram.com'+link.get('href'))
+    update_height = driver.execute_script("return document.body.scrollHeight")
+    #Sometimes,the webpage failed to load the new content, then I scroll the page up to refresh it  
+    if update_height == height:
+        driver.execute_script("window.scrollBy(0,-1000)") 
+    height = update_height
+    #Set each scrolling time for waiting the website to load the information
+    time.sleep(1)
+    
+### Caution : This process take a lot of time (nearly a day)
+```
+```python
+# As I collect all the links from each loop, it will contain a lot of duplicate link while scroll down in each loop.
+len(links)
+```
+```python
+# Delete the duplicate links
+links2 = list(dict.fromkeys(links))
+len(links2)
+```
+```python
+check_ins = []
+date = []
+driver2 = webdriver.Chrome()
+
+# Collect the chech-ins location and date
+for url in links2 :
+    try :
+        #Find the specific div of Check-ins
+        driver2.get(url)
+        page = driver2.page_source
+        soup = BeautifulSoup(page, 'lxml')
+        body = soup.find("body")
+        span = body.find("span")
+        section = span.find("section")
+        main = section.find("main")
+        div = main.find("div")
+        div2 = div.find("div")
+        article = div2.find("article")
+        header = article.find("header")
+        div3 = header.find("div",attrs={"class": "JF9hh"})
+        check_ins.append(div3.text)
+    
+        #Find the specific div of Check-ins Date page = driver.page_source
+        div4 = article.find("div",attrs={"class": "eo2As"})
+        div5 = div4.find("div",attrs={"class": "k_Q0X NnvRN"})
+        time = div.find("time")
+        date.append(time.get("datetime"))
+    
+    except :
+        pass
+```
+
+```python
+# Create data frame
+join = {'Location':check_ins,'Date':date}
+df = pd.DataFrame(join)
+# Set index to Location
+df.set_index('Location', inplace=True)
+```
+
 The first process is to scrape the check-ins and date of the user from Instagram. In this project, I use selenium to connect to Instagram website and use Beautiful Soup to read the content of html. As Instagram is a infinite scroll website, I use selenium to open the browser and scroll the page down until the end to collect all the post links. Then I use for loop to open all the links and get the check-ins location and date from each posts.
 
 ## Part 2 : Cleaning Data
